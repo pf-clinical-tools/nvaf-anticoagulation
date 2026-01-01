@@ -319,6 +319,40 @@
         8: "≈12–15% / year",
         9: "≈12–15% / year"
       };
+document.addEventListener("DOMContentLoaded", function () {
+
+  // ---- Global age consistency across CHA2DS2-VASc and ORBIT ----
+  const chaAge75 = document.getElementById("age75");         // CHA: Age ≥75
+  const chaAge6574 = document.getElementById("age6574");     // CHA: Age 65–74
+  const orbitAge75 = document.getElementById("orbitAge75");  // ORBIT: Age ≥75
+
+  function enforceGlobalAgeConsistency() {
+    if (!chaAge75 || !chaAge6574 || !orbitAge75) return;
+
+    if (chaAge75.checked) {
+      chaAge6574.checked = false;
+      orbitAge75.checked = true;
+    }
+
+    if (chaAge6574.checked) {
+      chaAge75.checked = false;
+      orbitAge75.checked = false;
+    }
+
+    if (orbitAge75.checked) {
+      chaAge75.checked = true;
+      chaAge6574.checked = false;
+    }
+  }
+  if (chaAge75) chaAge75.addEventListener("change", enforceGlobalAgeConsistency);
+  if (chaAge6574) chaAge6574.addEventListener("change", enforceGlobalAgeConsistency);
+  if (orbitAge75) orbitAge75.addEventListener("change", enforceGlobalAgeConsistency);
+  // ---- End global age consistency block ----
+
+  const chaStrokeRisk = {
+    0: "≈0.2–0.9% / year",
+    ...
+  };
 
       function getChaCategory(score, sexFemale) {
         const threshold = sexFemale ? 3 : 2;
