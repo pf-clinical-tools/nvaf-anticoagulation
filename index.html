@@ -588,19 +588,7 @@ if (cbAge75 && cbAge6574 && cbOrbitAge75) {
       const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
       allCheckboxes.forEach(cb => cb.addEventListener("change", recalc));
 
-      // Extra mutual exclusion on direct age change
-      const age75El = document.getElementById("age75");
-      const age6574El = document.getElementById("age6574");
-      function enforceAgeExclusion(e) {
-        if (!age75El || !age6574El) return;
-        if (e && e.target === age75El && age75El.checked) age6574El.checked = false;
-        if (e && e.target === age6574El && age6574El.checked) age75El.checked = false;
-        recalc();
-      }
-      if (age75El) age75El.addEventListener("change", enforceAgeExclusion);
-      if (age6574El) age6574El.addEventListener("change", enforceAgeExclusion);
-
-      // Initial calculation
+       // Initial calculation
       recalc();
     });
   </script>
