@@ -503,8 +503,7 @@ if (cbOrbitAge75 && cbAge75) {
         const orbitNoteEl = document.getElementById("orbitNote");
 
         orbitScoreEl.textContent = orbit;
-       orbitResultScore.textContent =
-  orbit + " (" + orbitInfo.category.replace(" bleeding risk", "").toLowerCase() + ").";
+        orbitResultScore.textContent = orbit;
 
         const orbitInfo = getOrbitInfo(orbit);
         orbitRiskEl.textContent = orbitInfo.risk;
