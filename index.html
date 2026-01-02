@@ -319,40 +319,6 @@
         8: "≈12–15% / year",
         9: "≈12–15% / year"
       };
-document.addEventListener("DOMContentLoaded", function () {
-
-  // ---- Global age consistency across CHA2DS2-VASc and ORBIT ----
-  const chaAge75 = document.getElementById("age75");         // CHA: Age ≥75
-  const chaAge6574 = document.getElementById("age6574");     // CHA: Age 65–74
-  const orbitAge75 = document.getElementById("orbitAge75");  // ORBIT: Age ≥75
-
-  function enforceGlobalAgeConsistency() {
-    if (!chaAge75 || !chaAge6574 || !orbitAge75) return;
-
-    if (chaAge75.checked) {
-      chaAge6574.checked = false;
-      orbitAge75.checked = true;
-    }
-
-    if (chaAge6574.checked) {
-      chaAge75.checked = false;
-      orbitAge75.checked = false;
-    }
-
-    if (orbitAge75.checked) {
-      chaAge75.checked = true;
-      chaAge6574.checked = false;
-    }
-  }
-  if (chaAge75) chaAge75.addEventListener("change", enforceGlobalAgeConsistency);
-  if (chaAge6574) chaAge6574.addEventListener("change", enforceGlobalAgeConsistency);
-  if (orbitAge75) orbitAge75.addEventListener("change", enforceGlobalAgeConsistency);
-  // ---- End global age consistency block ----
-
-  const chaStrokeRisk = {
-    0: "≈0.2–0.9% / year",
-    ...
-  };
 
       function getChaCategory(score, sexFemale) {
         const threshold = sexFemale ? 3 : 2;
@@ -472,36 +438,13 @@ document.addEventListener("DOMContentLoaded", function () {
       ];
 
       function recalc() {
-        // Enforce global age consistency across CHA2DS2-VASc and ORBIT
-const cbAge75 = document.getElementById("age75");         // CHA: ≥75
-const cbAge6574 = document.getElementById("age6574");     // CHA: 65–74
-const cbOrbitAge75 = document.getElementById("orbitAge75"); // ORBIT: ≥75
+        // Enforce mutual exclusivity of age bands
+        const cbAge75 = document.getElementById("age75");
+        const cbAge6574 = document.getElementById("age6574");
+        if (cbAge75 && cbAge6574 && cbAge75.checked && cbAge6574.checked) {
+          cbAge6574.checked = false; // prefer ≥75
+        }
 
-if (cbAge75 && cbAge6574 && cbOrbitAge75) {
-
-  // If ORBIT ≥75 is ticked → CHA must be ≥75 (not 65–74)
-  if (cbOrbitAge75.checked) {
-    cbAge75.checked = true;
-    cbAge6574.checked = false;
-  }
-
-  // If CHA ≥75 is ticked → ORBIT ≥75 should also be ticked
-  if (cbAge75.checked) {
-    cbAge6574.checked = false;
-    cbOrbitAge75.checked = true;
-  }
-
-  // If CHA 65–74 is ticked → CHA ≥75 must be off AND ORBIT ≥75 must be off
-  if (cbAge6574.checked) {
-    cbAge75.checked = false;
-    cbOrbitAge75.checked = false;
-  }
-
-  // Final guard: CHA age bands cannot both be ticked
-  if (cbAge75.checked && cbAge6574.checked) {
-    cbAge6574.checked = false;
-  }
-}
         // CHA2DS2-VASc
         let cha = 0;
         let sexFemale = false;
