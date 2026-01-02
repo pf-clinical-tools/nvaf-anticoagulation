@@ -278,7 +278,7 @@
         <div class="result-box">
           <h3>Major bleeding risk (on OAC)</h3>
           <div class="result-main" id="orbitResultMain">≈2.5% / year</div>
-          <div class="result-sub">ORBIT <span id="orbitResultScore">0</span> (low).</div>
+          <div class="result-sub">ORBIT <span id="orbitResultScore">0</span> (<span id="orbitResultCategory">low</span>).</div>
         </div>
 
         <div class="result-box">
@@ -506,6 +506,10 @@ if (cbOrbitAge75 && cbAge75) {
         orbitResultScore.textContent = orbit;
 
         const orbitInfo = getOrbitInfo(orbit);
+        const orbitResultCategory = document.getElementById("orbitResultCategory");
+if (orbitResultCategory) {
+  orbitResultCategory.textContent = orbitInfo.category.replace(" bleeding risk", "").toLowerCase();
+}
         orbitRiskEl.textContent = orbitInfo.risk;
         orbitResultMain.textContent = orbitInfo.shortRisk;
         orbitNoteEl.textContent = orbitInfo.detail;
