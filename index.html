@@ -232,7 +232,13 @@
 
         <div class="section-label" style="margin-top:12px;">ORBIT – Major bleeding risk (on OAC)</div>
         <div class="fields">
-          <div class="field"><input type="checkbox" id="orbitAge75"><label for="orbitAge75">Age ≥ 75 years</label></div>
+          <div class="field">
+  <input type="checkbox" id="orbitAge75" disabled>
+  <label for="orbitAge75">Age ≥ 75 years</label>
+  <span class="subnote">
+    Auto-filled from CHA₂DS₂-VASc age selection to prevent inconsistent age bands.
+  </span>
+</div>
           <div class="field"><input type="checkbox" id="orbitKidney"><label for="orbitKidney">CKD (eGFR &lt; 60 or dialysis)</label></div>
           <div class="field">
             <input type="checkbox" id="orbitAnemia">
@@ -438,13 +444,18 @@
       ];
 
       function recalc() {
-        // Enforce mutual exclusivity of age bands
-        const cbAge75 = document.getElementById("age75");
-        const cbAge6574 = document.getElementById("age6574");
-        if (cbAge75 && cbAge6574 && cbAge75.checked && cbAge6574.checked) {
-          cbAge6574.checked = false; // prefer ≥75
-        }
+       // Enforce mutual exclusivity of age bands
+const cbAge75 = document.getElementById("age75");
+const cbAge6574 = document.getElementById("age6574");
+if (cbAge75 && cbAge6574 && cbAge75.checked && cbAge6574.checked) {
+  cbAge6574.checked = false; // prefer ≥75
+}
 
+// Sync ORBIT Age ≥75 with CHA₂DS₂-VASc Age ≥75
+const cbOrbitAge75 = document.getElementById("orbitAge75");
+if (cbOrbitAge75 && cbAge75) {
+  cbOrbitAge75.checked = cbAge75.checked;
+}
         // CHA2DS2-VASc
         let cha = 0;
         let sexFemale = false;
