@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -204,6 +207,15 @@
 .reset-btn:hover{
   background: #f3f4f6;
 }
+select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.9rem;
+}
+
 
   </style>
 </head>
@@ -241,12 +253,12 @@
           </span>
         </div>
         <p class="note">
-          Men: consider OAC from CHA₂DS₂-VASc ≥2; women: from ≥3. In frailty, even “moderate” stroke risk may be highly disabling.
-        </p>
-
+  Very low risk: men CHA2DS2-VASc = 0; women CHA2DS2-VASc = 1 due to sex only. Consider anticoagulation at men = 1 or women = 2. Above these thresholds, anticoagulation usually favours benefit, but remains preference-sensitive where bleeding risk or frailty is significant.
+</p>
         <div class="section-label" style="margin-top:12px;">ORBIT – Major bleeding risk (on OAC)</div>
         <div class="fields">
-          <div class="field">
+          <div class="field">Men: consider OAC from CHA₂DS₂-VASc ≥2; women: from ≥3. In frailty, even “moderate” stroke risk may be highly disabling.
+</p>
   <input type="checkbox" id="orbitAge75" disabled>
   <label for="orbitAge75">Age ≥ 75 years</label>
   <span class="subnote">
@@ -274,13 +286,35 @@
         <p class="note" id="orbitNote">
           Use ORBIT to highlight and modify bleeding risk; do not use it alone to deny OAC where stroke risk is high.
         </p>
-        
+        <div class="section-label" style="margin-top:12px;">Clinical Frailty Scale (optional)</div>
+<p class="card-subtitle" style="margin-top:0;">
+  Frailty is used to contextualise interpretation only; it does not modify risk scores or risk estimates.
+</p>
+<select id="cfsSelect" aria-label="Clinical Frailty Scale">
+  <option value="">Not entered</option>
+  <option value="1">CFS 1 - Very fit</option>
+  <option value="2">CFS 2 - Fit</option>
+  <option value="3">CFS 3 - Managing well</option>
+  <option value="4">CFS 4 - Vulnerable</option>
+  <option value="5">CFS 5 - Mildly frail</option>
+  <option value="6">CFS 6 - Moderately frail</option>
+  <option value="7">CFS 7 - Severely frail</option>
+  <option value="8">CFS 8 - Very severely frail</option>
+  <option value="9">CFS 9 - Terminally ill</option>
+</select>
+<span class="subnote">
+  There is no validated quantitative adjustment for frailty; this input provides qualitative context only.
+</span>
+
         <button type="button" id="resetTool" class="reset-btn">Reset all selections</button>
       </section>
 
       <!-- RIGHT: OUTPUTS -->
       <section class="card">
         <h2 class="card-title">2. Outputs & Interpretation</h2>
+        <p class="card-subtitle">
+  All outputs are qualitative and derived from guideline thresholds; no hidden calculations of net benefit are performed.
+</p>
         <p class="card-subtitle">
           Approximate annual risks and a qualitative statement about net clinical benefit in a frail older adult.
         </p>
@@ -296,6 +330,13 @@
           <div class="result-main" id="orbitResultMain">≈2.5% / year</div>
           <div class="result-sub">ORBIT <span id="orbitResultScore">0</span> (<span id="orbitResultCategory">low</span>).</div>
         </div>
+	<div class="result-box">
+  	 <h3>Frailty context (optional)</h3>
+  	 <div class="result-main" id="frailtyMain">Not entered</div>
+  	 <div class="result-sub" id="frailtySub">
+    	   Frailty is used to contextualise interpretation only; it does not modify risk scores or risk estimates.
+  	 </div>
+	</div>
 
         <div class="result-box">
           <h3>Effect of DOAC</h3>
@@ -342,13 +383,15 @@
         9: "≈12–15% / year"
       };
 
-      function getChaCategory(score, sexFemale) {
-        const threshold = sexFemale ? 3 : 2;
-        if (score === 0) return "Very low stroke risk";
-        if (score < threshold) return "Low–moderate stroke risk";
-        if (score >= threshold && score <= 3) return "Moderate–high stroke risk";
-        return "High stroke risk";
-      }
+     function getChaCategory(score, sexFemale) {
+  if (!sexFemale && score === 0) return "Very low stroke risk";
+  if (sexFemale && score === 1) return "Very low stroke risk (sex only)";
+  if ((!sexFemale && score === 1) || (sexFemale && score === 2))
+    return "Threshold stroke risk (consider anticoagulation)";
+  if (score >= (sexFemale ? 3 : 2) && score <= 3)
+    return "High stroke risk";
+  return "Very high stroke risk";
+}
 
       function getOrbitInfo(score) {
         if (score <= 2) {
@@ -374,8 +417,33 @@
           };
         }
       }
+function getFrailtyInfo(cfsVal) {
+  if (!cfsVal) {
+    return {
+      main: "Not entered",
+      sub: "Frailty is used to contextualise interpretation only; it does not modify risk scores or risk estimates."
+    };
+  }
+  const n = parseInt(cfsVal, 10);
+  if (n >= 1 && n <= 4) {
+    return {
+      main: "CFS " + n + " (fit to vulnerable)",
+      sub: "No frailty-related override. Use standard guideline thresholds and clinical judgement."
+    };
+  }
+  if (n === 5 || n === 6) {
+    return {
+      main: "CFS " + n + " (mild to moderate frailty)",
+      sub: "Frailty may influence recovery and tolerance of adverse events. Decisions are often more preference-sensitive."
+    };
+  }
+  return {
+    main: "CFS " + n + " (advanced frailty)",
+    sub: "High uncertainty: competing risks and limited time-to-benefit may be relevant. Use goals of care and shared decision-making."
+  };
+}
 
-      function summariseOverall(cha, orbit, sexFemale) {
+      function summariseOverall(cha, orbit, sexFemale, cfsVal) {
         const threshold = sexFemale ? 3 : 2;
         const highStroke = cha >= 4;
         const veryHighStroke = cha >= 6;
@@ -386,7 +454,12 @@
         let title = "";
         let text = "";
 
-        if (cha < threshold) {
+        const veryLowStroke =
+  (!sexFemale && cha === 0) ||
+  (sexFemale && cha === 1);
+
+if (veryLowStroke) {
+
           title = "Net clinical benefit: usually against OAC";
           text = "Stroke risk is low. In frail older adults with CHA₂DS₂-VASc below the usual treatment threshold, anticoagulation is typically not recommended.";
           bullets.push(
@@ -409,7 +482,7 @@
           );
         } else if (veryHighStroke && highOrbit) {
           title = "Net clinical benefit: often positive but preference-sensitive";
-          text = "Stroke and bleeding risks are both high. Many patients still gain overall, but decisions should be tailored to patient values and clearly documented.";
+          text = "Stroke and bleeding risks are both high. Many patients may still gain overall, but decisions should be tailored to patient values and clearly documented.";
           bullets.push(
             "Discuss impact of disabling stroke vs major bleed with patient and carers.",
             "Consider PPI, closer monitoring, or a time-limited trial of OAC if appropriate."
@@ -436,6 +509,19 @@
             "Revisit the decision after any major change in health status or priorities."
           );
         }
+// Frailty overlay (qualitative only; no score recalculation)
+const c = cfsVal ? parseInt(cfsVal, 10) : null;
+if (c && (c === 5 || c === 6)) {
+  title = title + " (frailty-aware interpretation)";
+  bullets.push("Frailty may influence outcome severity and recovery; ensure preferences and goals are explicit.");
+} else if (c && c >= 7) {
+  title = "High uncertainty: individualise (advanced frailty)";
+  text = "Advanced frailty is associated with higher vulnerability to adverse outcomes and competing non-cardiovascular risks. This tool does not provide frailty-adjusted probabilities; decisions should be individualised and goals-of-care informed.";
+  bullets.push(
+    "Consider time-to-benefit, recovery potential, caregiver context and patient priorities.",
+    "If anticoagulation is started or withheld, document reasoning and review regularly."
+  );
+}
 
         return { title, text, bullets };
       }
@@ -538,7 +624,17 @@ if (orbitResultCategory) {
         orbitChip.querySelector("strong").textContent = orbitInfo.category + ":";
 
         // Net benefit
-        const overall = summariseOverall(cha, orbit, sexFemale);
+        const cfsSelect = document.getElementById("cfsSelect");
+const cfsVal = cfsSelect ? cfsSelect.value : "";
+
+const frailty = getFrailtyInfo(cfsVal);
+const frailtyMain = document.getElementById("frailtyMain");
+const frailtySub = document.getElementById("frailtySub");
+if (frailtyMain) frailtyMain.textContent = frailty.main;
+if (frailtySub) frailtySub.textContent = frailty.sub;
+
+const overall = summariseOverall(cha, orbit, sexFemale, cfsVal);
+
         const netTitleEl = document.getElementById("netTitle");
         const netTextEl = document.getElementById("netText");
         const netBulletsEl = document.getElementById("netBullets");
@@ -562,6 +658,8 @@ if (orbitResultCategory) {
 
       const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
       allCheckboxes.forEach(cb => cb.addEventListener("change", recalc));
+const cfs = document.getElementById("cfsSelect");
+if (cfs) cfs.addEventListener("change", recalc);
 
       // Extra mutual exclusion on direct age change
       const age75El = document.getElementById("age75");
@@ -582,7 +680,10 @@ const resetBtn = document.getElementById("resetTool");
 if (resetBtn) {
   resetBtn.addEventListener("click", () => {
     document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    recalc();
+const cfs = document.getElementById("cfsSelect");
+if (cfs) cfs.value = "";
+recalc();
+
   });
 }
     });
