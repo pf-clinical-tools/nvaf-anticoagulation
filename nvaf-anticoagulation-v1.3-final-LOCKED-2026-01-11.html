@@ -1,0 +1,691 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Anticoagulation Risk Assessment Tool in NVAF</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+ 
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card-bg: #ffffff;
+      --border: #e5e7eb;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --danger: #b91c1c;
+      --success: #15803d;
+      --warning: #d97706;
+      --muted: #6b7280;
+      --text: #111827;
+      --radius: 10px;
+      --shadow: 0 10px 30px rgba(15,23,42,0.12);
+    }
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 750;
+    }
+    .subtitle {
+      margin: 6px 0 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr);
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: minmax(0, 1fr); }
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px 18px 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(148,163,184,0.4);
+    }
+    .card-title {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      font-weight: 650;
+    }
+    .card-subtitle {
+      margin: 0 0 10px;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+    .section-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px 12px;
+      font-size: 0.86rem;
+    }
+    @media (max-width: 700px) {
+      .fields { grid-template-columns: minmax(0, 1fr); }
+    }
+    .field {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 2px 0;
+    }
+    .field input {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+    }
+    .subnote {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 1px;
+      margin-left: 22px;
+    }
+    .score-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 0.84rem;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.8);
+      background: #f9fafb;
+    }
+    .chip strong { font-weight: 650; }
+    .chip-primary {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .chip-danger {
+      border-color: var(--danger);
+      background: #fef2f2;
+      color: var(--danger);
+    }
+    .chip-low { border-color: var(--success); background: #ecfdf3; color: var(--success); }
+    .chip-mod { border-color: var(--warning); background: #fffbeb; color: var(--warning); }
+    .chip-high { border-color: var(--danger); background: #fef2f2; color: var(--danger); }
+    .note {
+      margin-top: 4px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .result-box {
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+    .result-box h3 {
+      margin: 0 0 4px;
+      font-size: 0.94rem;
+      font-weight: 650;
+    }
+    .result-main {
+      font-size: 0.96rem;
+      font-weight: 700;
+      margin-bottom: 1px;
+    }
+    .result-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .net-summary {
+      border-left: 4px solid var(--primary);
+      padding-left: 10px;
+      margin-top: 6px;
+      font-size: 0.86rem;
+    }
+    .net-summary h3 {
+      margin: 0 0 2px;
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+    .net-summary p {
+      margin: 0;
+      font-size: 0.84rem;
+    }
+    .bullet-list {
+      margin: 6px 0 0 16px;
+      padding: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .bullet-list li {
+      margin-bottom: 2px;
+    }
+    .disclaimer {
+      font-size: 0.76rem;
+      color: var(--muted);
+      border-top: 1px dashed #d1d5db;
+      margin-top: 14px;
+      padding-top: 8px;
+    }
+    .reset-btn{
+  margin-top: 12px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  cursor: pointer;
+}
+.reset-btn:hover{
+  background: #f3f4f6;
+}
+select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  font-size: 0.9rem;
+}
+
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Anticoagulation Risk Assessment Tool in NVAF</h1>
+      <p class="subtitle">
+        CHA₂DS₂-VASc + ORBIT with frailty-informed net clinical benefit. For clinicians only.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: INPUTS -->
+      <section class="card">
+        <h2 class="card-title">1. Inputs</h2>
+        <p class="card-subtitle">Tick all that apply. Outputs update automatically.</p>
+
+        <div class="section-label">CHA₂DS₂-VASc – Stroke risk (no OAC)</div>
+        <div class="fields">
+          <div class="field"><input type="checkbox" id="hf"><label for="hf">Congestive heart failure / LV dysfunction</label></div>
+          <div class="field"><input type="checkbox" id="htn"><label for="htn">Hypertension (treated or untreated)</label></div>
+          <div class="field"><input type="checkbox" id="age75"><label for="age75">Age ≥ 75 years</label></div>
+          <div class="field"><input type="checkbox" id="dm"><label for="dm">Diabetes mellitus</label></div>
+          <div class="field"><input type="checkbox" id="stroke"><label for="stroke">Previous stroke / TIA / systemic embolism</label></div>
+          <div class="field"><input type="checkbox" id="vascular"><label for="vascular">Vascular disease (MI, PAD, aortic plaque)</label></div>
+          <div class="field"><input type="checkbox" id="age6574"><label for="age6574">Age 65–74 years</label></div>
+          <div class="field"><input type="checkbox" id="female"><label for="female">Female sex</label></div>
+        </div>
+
+        <div class="score-row">
+          <span class="chip chip-primary"><strong>CHA₂DS₂-VASc:</strong> <span id="chaScore">0</span></span>
+          <span class="chip" id="chaChip">
+            <strong>Stroke risk:</strong> <span id="chaRiskText">≈0.2–0.9% / year</span>
+          </span>
+        </div>
+        <p class="note">
+  Very low risk: men CHA2DS2-VASc = 0; women CHA2DS2-VASc = 1 due to sex only. Consider anticoagulation at men = 1 or women = 2. Above these thresholds, anticoagulation usually favours benefit, but remains preference-sensitive where bleeding risk or frailty is significant.
+</p>
+        <div class="section-label" style="margin-top:12px;">ORBIT – Major bleeding risk (on OAC)</div>
+        <div class="fields">
+          <div class="field">Men: consider OAC from CHA₂DS₂-VASc ≥2; women: from ≥3. In frailty, even “moderate” stroke risk may be highly disabling.
+</p>
+  <input type="checkbox" id="orbitAge75" disabled>
+  <label for="orbitAge75">Age ≥ 75 years</label>
+  <span class="subnote">
+    Age ≥75 is derived automatically from CHA₂DS₂-VASc to ensure internal consistency.
+  </span>
+</div>
+          <div class="field"><input type="checkbox" id="orbitKidney"><label for="orbitKidney">CKD (eGFR &lt; 60 or dialysis)</label></div>
+          <div class="field">
+            <input type="checkbox" id="orbitAnemia">
+            <label for="orbitAnemia">
+              Anaemia / low Hb
+              <span class="subnote">Male Hb &lt;130 g/L; Female Hb &lt;120 g/L</span>
+            </label>
+          </div>
+          <div class="field"><input type="checkbox" id="orbitBleed"><label for="orbitBleed">Previous clinically relevant bleed</label></div>
+          <div class="field"><input type="checkbox" id="orbitAntiplatelet"><label for="orbitAntiplatelet">Concomitant antiplatelet therapy</label></div>
+        </div>
+
+        <div class="score-row">
+          <span class="chip chip-danger"><strong>ORBIT:</strong> <span id="orbitScore">0</span></span>
+          <span class="chip" id="orbitChip">
+            <strong>Bleeding risk:</strong> <span id="orbitRiskText">≈2.5% / year (low)</span>
+          </span>
+        </div>
+        <p class="note" id="orbitNote">
+          Use ORBIT to highlight and modify bleeding risk; do not use it alone to deny OAC where stroke risk is high.
+        </p>
+        <div class="section-label" style="margin-top:12px;">Clinical Frailty Scale (optional)</div>
+<p class="card-subtitle" style="margin-top:0;">
+  Frailty is used to contextualise interpretation only; it does not modify risk scores or risk estimates.
+</p>
+<select id="cfsSelect" aria-label="Clinical Frailty Scale">
+  <option value="">Not entered</option>
+  <option value="1">CFS 1 - Very fit</option>
+  <option value="2">CFS 2 - Fit</option>
+  <option value="3">CFS 3 - Managing well</option>
+  <option value="4">CFS 4 - Vulnerable</option>
+  <option value="5">CFS 5 - Mildly frail</option>
+  <option value="6">CFS 6 - Moderately frail</option>
+  <option value="7">CFS 7 - Severely frail</option>
+  <option value="8">CFS 8 - Very severely frail</option>
+  <option value="9">CFS 9 - Terminally ill</option>
+</select>
+<span class="subnote">
+  There is no validated quantitative adjustment for frailty; this input provides qualitative context only.
+</span>
+
+        <button type="button" id="resetTool" class="reset-btn">Reset all selections</button>
+      </section>
+
+      <!-- RIGHT: OUTPUTS -->
+      <section class="card">
+        <h2 class="card-title">2. Outputs & Interpretation</h2>
+        <p class="card-subtitle">
+  All outputs are qualitative and derived from guideline thresholds; no hidden calculations of net benefit are performed.
+</p>
+        <p class="card-subtitle">
+          Approximate annual risks and a qualitative statement about net clinical benefit in a frail older adult.
+        </p>
+
+        <div class="result-box">
+          <h3>Stroke risk (no OAC)</h3>
+          <div class="result-main" id="strokeResultMain">≈0.2–0.9% / year</div>
+          <div class="result-sub">CHA₂DS₂-VASc <span id="strokeResultScore">0</span>.</div>
+        </div>
+
+        <div class="result-box">
+          <h3>Major bleeding risk (on OAC)</h3>
+          <div class="result-main" id="orbitResultMain">≈2.5% / year</div>
+          <div class="result-sub">ORBIT <span id="orbitResultScore">0</span> (<span id="orbitResultCategory">low</span>).</div>
+        </div>
+	<div class="result-box">
+  	 <h3>Frailty context (optional)</h3>
+  	 <div class="result-main" id="frailtyMain">Not entered</div>
+  	 <div class="result-sub" id="frailtySub">
+    	   Frailty is used to contextualise interpretation only; it does not modify risk scores or risk estimates.
+  	 </div>
+	</div>
+
+        <div class="result-box">
+          <h3>Effect of DOAC</h3>
+          <div class="result-main">Stroke reduction ≈60–70%</div>
+          <div class="result-sub">
+            In AF trials, DOACs typically reduce stroke by ≈60–70% and intracranial haemorrhage by ≈50% vs warfarin.
+          </div>
+        </div>
+
+        <div class="net-summary">
+          <h3 id="netTitle">Net clinical benefit: set inputs</h3>
+          <p id="netText">
+            Tick CHA₂DS₂-VASc and ORBIT factors to generate a brief statement to support shared decision-making.
+          </p>
+        </div>
+
+        <ul class="bullet-list" id="netBullets">
+          <li>Falls alone rarely offset the stroke-prevention benefit of anticoagulation.</li>
+          <li>Reassess as frailty, renal function and bleeding history change.</li>
+        </ul>
+
+        <p class="disclaimer">
+          © 2025 Prabhath Fernando MBBS MD FRCP. All rights reserved.<br>
+          This tool is intended for healthcare professionals only. It provides estimates derived from published cohort data
+          and does not replace clinical judgement, patient preferences, or local/national guidelines. Anticoagulation
+          decisions must be individualised, documented, and reviewed as clinical circumstances change. Version 1.2 — wording refinement (2026).
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const chaStrokeRisk = {
+        0: "≈0.2–0.9% / year",
+        1: "≈1.3% / year",
+        2: "≈2.2% / year",
+        3: "≈3.2% / year",
+        4: "≈4.8% / year",
+        5: "≈7.2% / year",
+        6: "≈9.7% / year",
+        7: "≈11–12% / year",
+        8: "≈12–15% / year",
+        9: "≈12–15% / year"
+      };
+
+     function getChaCategory(score, sexFemale) {
+  if (!sexFemale && score === 0) return "Very low stroke risk";
+  if (sexFemale && score === 1) return "Very low stroke risk (sex only)";
+  if ((!sexFemale && score === 1) || (sexFemale && score === 2))
+    return "Threshold stroke risk (consider anticoagulation)";
+  if (score >= (sexFemale ? 3 : 2) && score <= 3)
+    return "High stroke risk";
+  return "Very high stroke risk";
+}
+
+      function getOrbitInfo(score) {
+        if (score <= 2) {
+          return {
+            category: "Low bleeding risk",
+            risk: "≈2.5% / year (low)",
+            shortRisk: "≈2.5% / year",
+            detail: "Bleeding risk generally acceptable for OAC if stroke risk is not trivial."
+          };
+        } else if (score === 3) {
+          return {
+            category: "Medium bleeding risk",
+            risk: "≈4.7% / year (medium)",
+            shortRisk: "≈4.7% / year",
+            detail: "Bleeding risk increased; optimise modifiable factors and monitor closely."
+          };
+        } else {
+          return {
+            category: "High bleeding risk",
+            risk: "≈8.1% / year (high)",
+            shortRisk: "≈8.1% / year",
+            detail: "High bleeding risk; net benefit depends strongly on stroke risk and patient priorities."
+          };
+        }
+      }
+function getFrailtyInfo(cfsVal) {
+  if (!cfsVal) {
+    return {
+      main: "Not entered",
+      sub: "Frailty is used to contextualise interpretation only; it does not modify risk scores or risk estimates."
+    };
+  }
+  const n = parseInt(cfsVal, 10);
+  if (n >= 1 && n <= 4) {
+    return {
+      main: "CFS " + n + " (fit to vulnerable)",
+      sub: "No frailty-related override. Use standard guideline thresholds and clinical judgement."
+    };
+  }
+  if (n === 5 || n === 6) {
+    return {
+      main: "CFS " + n + " (mild to moderate frailty)",
+      sub: "Frailty may influence recovery and tolerance of adverse events. Decisions are often more preference-sensitive."
+    };
+  }
+  return {
+    main: "CFS " + n + " (advanced frailty)",
+    sub: "High uncertainty: competing risks and limited time-to-benefit may be relevant. Use goals of care and shared decision-making."
+  };
+}
+
+      function summariseOverall(cha, orbit, sexFemale, cfsVal) {
+        const threshold = sexFemale ? 3 : 2;
+        const highStroke = cha >= 4;
+        const veryHighStroke = cha >= 6;
+        const lowOrbit = orbit <= 2;
+        const medOrbit = orbit === 3;
+        const highOrbit = orbit >= 4;
+        const bullets = [];
+        let title = "";
+        let text = "";
+
+        const veryLowStroke =
+  (!sexFemale && cha === 0) ||
+  (sexFemale && cha === 1);
+
+if (veryLowStroke) {
+
+          title = "Net clinical benefit: usually against OAC";
+          text = "Stroke risk is low. In frail older adults with CHA₂DS₂-VASc below the usual treatment threshold, anticoagulation is typically not recommended.";
+          bullets.push(
+            "Focus on rate/rhythm control, falls prevention, blood pressure and vascular risk management.",
+            "Reassess CHA₂DS₂-VASc as age and comorbidities change."
+          );
+        } else if (highStroke && lowOrbit) {
+          title = "Net clinical benefit: strongly favours OAC";
+          text = "High stroke risk and low bleeding risk. Anticoagulation is very likely to provide net benefit, especially as stroke is often highly disabling in frailty.";
+          bullets.push(
+            "Offer OAC; DOACs usually preferred where suitable.",
+            "Optimise BP, treat anaemia, use GI protection if indicated and avoid unnecessary NSAIDs/dual antiplatelets."
+          );
+        } else if (highStroke && medOrbit) {
+          title = "Net clinical benefit: favours OAC with risk mitigation";
+          text = "Stroke risk is high and bleeding risk moderate. For most frail older adults, stroke prevention still outweighs bleeding risk when modifiable factors are optimised.";
+          bullets.push(
+            "Address anaemia, GI disease, uncontrolled hypertension and interacting medicines.",
+            "Use guideline-based DOAC dosing according to age, weight and renal function."
+          );
+        } else if (veryHighStroke && highOrbit) {
+          title = "Net clinical benefit: often positive but preference-sensitive";
+          text = "Stroke and bleeding risks are both high. Many patients may still gain overall, but decisions should be tailored to patient values and clearly documented.";
+          bullets.push(
+            "Discuss impact of disabling stroke vs major bleed with patient and carers.",
+            "Consider PPI, closer monitoring, or a time-limited trial of OAC if appropriate."
+          );
+        } else if (!highStroke && lowOrbit) {
+          title = "Net clinical benefit: often favours OAC";
+          text = "Moderate stroke risk with low bleeding risk – anticoagulation will benefit many frail patients given the disability from even small strokes.";
+          bullets.push(
+            "Explain absolute stroke vs bleeding risks and document shared decision-making.",
+            "Plan regular review of renal function, haemoglobin, frailty and falls risk."
+          );
+        } else if (!highStroke && (medOrbit || highOrbit)) {
+          title = "Net clinical benefit: uncertain; individualise";
+          text = "Moderate stroke risk with raised bleeding risk. Net benefit is uncertain and depends on individual priorities.";
+          bullets.push(
+            "Use shared decision-making to explore tolerance of stroke vs bleeding risk.",
+            "If OAC is withheld, document why and optimise non-OAC vascular risk measures."
+          );
+        } else {
+          title = "Net clinical benefit: uncertain; individualise";
+          text = "Both stroke and bleeding risks are elevated. Consider overall frailty, life expectancy, cognition and goals of care.";
+          bullets.push(
+            "Clarify if the main goal is life prolongation, stroke prevention, symptom control or comfort.",
+            "Revisit the decision after any major change in health status or priorities."
+          );
+        }
+// Frailty overlay (qualitative only; no score recalculation)
+const c = cfsVal ? parseInt(cfsVal, 10) : null;
+if (c && (c === 5 || c === 6)) {
+  title = title + " (frailty-aware interpretation)";
+  bullets.push("Frailty may influence outcome severity and recovery; ensure preferences and goals are explicit.");
+} else if (c && c >= 7) {
+  title = "High uncertainty: individualise (advanced frailty)";
+  text = "Advanced frailty is associated with higher vulnerability to adverse outcomes and competing non-cardiovascular risks. This tool does not provide frailty-adjusted probabilities; decisions should be individualised and goals-of-care informed.";
+  bullets.push(
+    "Consider time-to-benefit, recovery potential, caregiver context and patient priorities.",
+    "If anticoagulation is started or withheld, document reasoning and review regularly."
+  );
+}
+
+        return { title, text, bullets };
+      }
+
+      const chaInputs = [
+        { id: "hf", points: 1 },
+        { id: "htn", points: 1 },
+        { id: "age75", points: 2 },
+        { id: "dm", points: 1 },
+        { id: "stroke", points: 2 },
+        { id: "vascular", points: 1 },
+        { id: "age6574", points: 1 },
+        { id: "female", points: 1 }
+      ];
+
+      const orbitInputs = [
+        { id: "orbitAge75", points: 1 },
+        { id: "orbitKidney", points: 1 },
+        { id: "orbitAnemia", points: 2 },
+        { id: "orbitBleed", points: 2 },
+        { id: "orbitAntiplatelet", points: 1 }
+      ];
+
+      function recalc() {
+       // Enforce mutual exclusivity of age bands
+const cbAge75 = document.getElementById("age75");
+const cbAge6574 = document.getElementById("age6574");
+if (cbAge75 && cbAge6574 && cbAge75.checked && cbAge6574.checked) {
+  cbAge6574.checked = false; // prefer ≥75
+}
+
+// Sync ORBIT Age ≥75 with CHA₂DS₂-VASc Age ≥75
+const cbOrbitAge75 = document.getElementById("orbitAge75");
+if (cbOrbitAge75 && cbAge75) {
+  cbOrbitAge75.checked = cbAge75.checked;
+}
+        // CHA2DS2-VASc
+        let cha = 0;
+        let sexFemale = false;
+        chaInputs.forEach(f => {
+          const cb = document.getElementById(f.id);
+          if (cb && cb.checked) {
+            cha += f.points;
+            if (f.id === "female") sexFemale = true;
+          }
+        });
+        if (cha > 9) cha = 9;
+
+        const chaScoreEl = document.getElementById("chaScore");
+        const chaRiskEl = document.getElementById("chaRiskText");
+        const chaChip = document.getElementById("chaChip");
+        const strokeResultMain = document.getElementById("strokeResultMain");
+        const strokeResultScore = document.getElementById("strokeResultScore");
+
+        chaScoreEl.textContent = cha;
+        strokeResultScore.textContent = cha;
+
+        const chaRiskText = chaStrokeRisk.hasOwnProperty(cha) ? chaStrokeRisk[cha] : "≥15% / year";
+        chaRiskEl.textContent = chaRiskText;
+        strokeResultMain.textContent = chaRiskText;
+
+        const chaCat = getChaCategory(cha, sexFemale);
+        chaChip.classList.remove("chip-low", "chip-mod", "chip-high");
+        if (cha <= 1) chaChip.classList.add("chip-low");
+        else if (cha >= 4) chaChip.classList.add("chip-high");
+        else chaChip.classList.add("chip-mod");
+        chaChip.querySelector("strong").textContent = chaCat + ":";
+
+        // ORBIT
+        let orbit = 0;
+        orbitInputs.forEach(f => {
+          const cb = document.getElementById(f.id);
+          if (cb && cb.checked) orbit += f.points;
+        });
+
+        const orbitScoreEl = document.getElementById("orbitScore");
+        const orbitRiskEl = document.getElementById("orbitRiskText");
+        const orbitChip = document.getElementById("orbitChip");
+        const orbitResultMain = document.getElementById("orbitResultMain");
+        const orbitResultScore = document.getElementById("orbitResultScore");
+        const orbitNoteEl = document.getElementById("orbitNote");
+
+        orbitScoreEl.textContent = orbit;
+        orbitResultScore.textContent = orbit;
+
+        const orbitInfo = getOrbitInfo(orbit);
+        const orbitResultCategory = document.getElementById("orbitResultCategory");
+if (orbitResultCategory) {
+  orbitResultCategory.textContent = (orbit <= 2) ? "low" : (orbit === 3) ? "medium" : "high";
+}
+
+        orbitRiskEl.textContent = orbitInfo.risk;
+        orbitResultMain.textContent = orbitInfo.shortRisk;
+        orbitNoteEl.textContent = orbitInfo.detail;
+
+        orbitChip.classList.remove("chip-low", "chip-mod", "chip-high");
+        if (orbit <= 2) orbitChip.classList.add("chip-low");
+        else if (orbit === 3) orbitChip.classList.add("chip-mod");
+        else orbitChip.classList.add("chip-high");
+        orbitChip.querySelector("strong").textContent = orbitInfo.category + ":";
+
+        // Net benefit
+        const cfsSelect = document.getElementById("cfsSelect");
+const cfsVal = cfsSelect ? cfsSelect.value : "";
+
+const frailty = getFrailtyInfo(cfsVal);
+const frailtyMain = document.getElementById("frailtyMain");
+const frailtySub = document.getElementById("frailtySub");
+if (frailtyMain) frailtyMain.textContent = frailty.main;
+if (frailtySub) frailtySub.textContent = frailty.sub;
+
+const overall = summariseOverall(cha, orbit, sexFemale, cfsVal);
+
+        const netTitleEl = document.getElementById("netTitle");
+        const netTextEl = document.getElementById("netText");
+        const netBulletsEl = document.getElementById("netBullets");
+
+        netTitleEl.textContent = overall.title;
+        netTextEl.textContent = overall.text;
+
+        netBulletsEl.innerHTML = "";
+        overall.bullets.forEach(b => {
+          const li = document.createElement("li");
+          li.textContent = b;
+          netBulletsEl.appendChild(li);
+        });
+        const li1 = document.createElement("li");
+        li1.textContent = "DOACs typically reduce stroke by ~60–70% and intracranial haemorrhage by ~50% vs warfarin in AF trials.";
+        const li2 = document.createElement("li");
+        li2.textContent = "Review the decision as frailty, renal function, anaemia, bleeding history and goals of care evolve.";
+        netBulletsEl.appendChild(li1);
+        netBulletsEl.appendChild(li2);
+      }
+
+      const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+      allCheckboxes.forEach(cb => cb.addEventListener("change", recalc));
+const cfs = document.getElementById("cfsSelect");
+if (cfs) cfs.addEventListener("change", recalc);
+
+      // Extra mutual exclusion on direct age change
+      const age75El = document.getElementById("age75");
+      const age6574El = document.getElementById("age6574");
+      function enforceAgeExclusion(e) {
+        if (!age75El || !age6574El) return;
+        if (e && e.target === age75El && age75El.checked) age6574El.checked = false;
+        if (e && e.target === age6574El && age6574El.checked) age75El.checked = false;
+        recalc();
+      }
+      if (age75El) age75El.addEventListener("change", enforceAgeExclusion);
+      if (age6574El) age6574El.addEventListener("change", enforceAgeExclusion);
+
+      // Initial calculation
+      recalc();
+      // Reset button (UI only)
+const resetBtn = document.getElementById("resetTool");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+const cfs = document.getElementById("cfsSelect");
+if (cfs) cfs.value = "";
+recalc();
+
+  });
+}
+    });
+  </script>
+</body>
+</html>
