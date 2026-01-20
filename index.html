@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Anticoagulation Risk Assessment Tool in NVAF</title>
+  <title>NVAF Anticoagulation Risk Assessment Tool</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
@@ -162,21 +161,33 @@
       font-size: 0.8rem;
       color: var(--muted);
     }
+
+    /* Net clinical benefit emphasis */
     .net-summary {
-      border-left: 4px solid var(--primary);
-      padding-left: 10px;
-      margin-top: 6px;
-      font-size: 0.86rem;
+      border-left: 5px solid var(--primary);
+      background: #f8fafc;
+      padding: 12px 12px 12px 14px;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+    .net-summary.negative {
+      border-left-color: var(--danger);
+      background: #fef2f2;
+    }
+    .net-summary.uncertain {
+      border-left-color: var(--warning);
+      background: #fffbeb;
     }
     .net-summary h3 {
-      margin: 0 0 2px;
-      font-size: 0.9rem;
-      font-weight: 650;
+      margin: 0 0 4px;
+      font-size: 1rem;
+      font-weight: 800;
     }
     .net-summary p {
       margin: 0;
-      font-size: 0.84rem;
+      font-size: 0.86rem;
     }
+
     .bullet-list {
       margin: 6px 0 0 16px;
       padding: 0;
@@ -219,7 +230,7 @@
 <body>
   <div class="app">
     <header>
-      <h1>Anticoagulation Risk Assessment Tool in NVAF</h1>
+      <h1>NVAF Anticoagulation Risk Assessment Tool</h1>
       <p class="subtitle">
         CHA₂DS₂-VASc + ORBIT with frailty-informed net clinical benefit. For clinicians only.
       </p>
@@ -335,15 +346,16 @@
           </div>
         </div>
 
-        <div class="result-box">
+        <!-- DOAC box with IDs for frailty-aware framing (no scoring/threshold changes) -->
+        <div class="result-box" id="doacBox">
           <h3>Effect of DOAC</h3>
-          <div class="result-main">Stroke reduction ≈60–70%</div>
-          <div class="result-sub">
+          <div class="result-main" id="doacMain">Stroke reduction ≈60–70%</div>
+          <div class="result-sub" id="doacSub">
             In AF trials, DOACs typically reduce stroke by ≈60–70% and intracranial haemorrhage by ≈50% vs warfarin.
           </div>
         </div>
 
-        <div class="net-summary">
+        <div class="net-summary" id="netSummaryBox">
           <h3 id="netTitle">Net clinical benefit: set inputs</h3>
           <p id="netText">
             Tick CHA₂DS₂-VASc and ORBIT factors to generate a brief statement to support shared decision-making.
@@ -619,10 +631,40 @@
         if (frailtyMain) frailtyMain.textContent = frailty.main;
         if (frailtySub) frailtySub.textContent = frailty.sub;
 
+        // DOAC efficacy framing: contextualise in advanced frailty (CFS ≥7)
+        const doacMainEl = document.getElementById("doacMain");
+        const doacSubEl = document.getElementById("doacSub");
+        const cNum = cfsVal ? parseInt(cfsVal, 10) : null;
+
+        if (doacMainEl && doacSubEl) {
+          if (cNum && cNum >= 7) {
+            doacMainEl.textContent = "Relative efficacy data (trial populations)";
+            doacSubEl.textContent =
+              "Relative stroke/ICH reductions are derived from AF trial populations with limited representation of advanced frailty and short life expectancy. In advanced frailty, absolute benefit may be smaller and decisions are often preference-sensitive (time-to-benefit and competing risks matter).";
+          } else {
+            doacMainEl.textContent = "Stroke reduction ≈60–70%";
+            doacSubEl.textContent =
+              "In AF trials, DOACs typically reduce stroke by ≈60–70% and intracranial haemorrhage by ≈50% vs warfarin.";
+          }
+        }
+
         // Net benefit
         const overall = summariseOverall(cha, orbit, sexFemale, cfsVal);
         document.getElementById("netTitle").textContent = overall.title;
         document.getElementById("netText").textContent = overall.text;
+
+        // Emphasise net clinical benefit visually (no logic change)
+        const netBox = document.getElementById("netSummaryBox");
+        if (netBox) {
+          netBox.classList.remove("negative", "uncertain");
+
+          const t = (overall.title || "").toLowerCase();
+          if (t.includes("usually against") || t.includes("high uncertainty")) {
+            netBox.classList.add("negative");
+          } else if (t.includes("uncertain") || t.includes("preference-sensitive")) {
+            netBox.classList.add("uncertain");
+          }
+        }
 
         const netBulletsEl = document.getElementById("netBullets");
         netBulletsEl.innerHTML = "";
