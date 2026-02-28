@@ -111,13 +111,14 @@
       line-height:1.25;
     }
 
+    /* SCORE ROW */
     .score-row{
       display:flex;
       flex-wrap:wrap;
       gap:8px;
       margin-top:10px;
       font-size:0.86rem;
-      min-width:0; /* iPhone flexbox overflow safeguard */
+      min-width:0; /* critical flex overflow safeguard */
     }
 
     .chip{
@@ -129,9 +130,11 @@
       border:1px solid rgba(148,163,184,0.75);
       background:#f9fafb;
       white-space:nowrap;
-      min-width:0;      /* allows flex shrink */
-      max-width:100%;   /* prevents overflow */
+      min-width:0;
+      max-width:100%;
+      flex:0 1 auto; /* allow shrink but don't force full-width */
     }
+
     .chip strong{ font-weight:700; }
     .chip-primary{ border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
     .chip-low{ border-color:var(--success); background:var(--success-soft); color:var(--success); }
@@ -264,16 +267,23 @@
       line-height:1.35;
     }
 
-    /* iPhone: allow ONLY the long risk chips to wrap inside the pill (prevents overflow without ugly full-width stacking) */
+    /* iPhone fix: ONLY long risk chips wrap inside the pill (no vertical stacking of the whole row) */
     @media (max-width: 520px){
       #chaChip, #orbitChip{
-        white-space: normal;     /* allow wrap inside chip */
-        display: inline-flex;    /* keep pill sizing to content */
-        flex-wrap: wrap;         /* allow second line */
+        white-space: normal;        /* allow wrapping */
+        flex-wrap: wrap;            /* allow second line */
+        max-width: 100%;            /* never exceed card */
         line-height: 1.2;
       }
-      /* keep the label+value from separating oddly */
-      #chaChip strong, #orbitChip strong{ white-space: nowrap; }
+      /* keep label intact; let the risk text wrap */
+      #chaChip strong, #orbitChip strong{
+        white-space: nowrap;
+      }
+      #chaChip span, #orbitChip span{
+        white-space: normal;
+        overflow-wrap: break-word;  /* safe wrap */
+        word-break: normal;
+      }
     }
   </style>
 </head>
