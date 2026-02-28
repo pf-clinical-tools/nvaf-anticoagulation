@@ -143,7 +143,7 @@
 
     /* Let ONLY the long risk chips take available width and wrap nicely */
     #chaChip, #orbitChip{ flex:1 1 auto; }
-
+.chip{ flex:0 1 auto; max-width:100%; min-width:0; white-space:nowrap; }
     .note{ margin-top:8px; font-size:0.80rem; color:var(--muted); line-height:1.35; }
 
     .result-box{
@@ -270,27 +270,13 @@
       line-height:1.35;
     }
 
-    /* iPhone: wrap INSIDE the long risk chips in a tidy way (no full-width stacking) */
-    @media (max-width: 520px){
-      /* slightly tighter chip look on iPhone */
-      .chip{ padding:4px 9px; }
-
-      #chaChip, #orbitChip{
-        white-space:normal;      /* allow wrapping inside pill */
-        align-items:flex-start;  /* nicer when multi-line */
-      }
-
-      /* Make it look deliberate: label line, then % line */
-      #chaChip strong, #orbitChip strong{
-        display:block;
-        line-height:1.15;
-        white-space:normal;
-      }
-      #chaChip span, #orbitChip span{
-        display:block;
-        line-height:1.15;
-      }
-    }
+    /* iPhone: increase usable width (fixes chip overflow without changing chip style) */
+@media (max-width: 520px){
+  body{ padding: 12px; }              /* was 24px */
+  .card{ padding: 14px 14px 16px; }   /* was 16px 18px 18px */
+  .grid{ gap: 14px; }                 /* was 18px */
+}
+    
   </style>
 </head>
 
@@ -866,3 +852,4 @@
   </script>
 </body>
 </html>
+
