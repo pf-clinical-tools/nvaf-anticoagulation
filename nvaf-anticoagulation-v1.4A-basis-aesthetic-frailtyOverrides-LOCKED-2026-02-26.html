@@ -111,14 +111,15 @@
       line-height:1.25;
     }
 
-    /* SCORE ROW */
+    /* Score row */
     .score-row{
       display:flex;
       flex-wrap:wrap;
       gap:8px;
       margin-top:10px;
       font-size:0.86rem;
-      min-width:0; /* critical flex overflow safeguard */
+      min-width:0;              /* iPhone flexbox overflow safeguard */
+      align-items:flex-start;
     }
 
     .chip{
@@ -132,14 +133,16 @@
       white-space:nowrap;
       min-width:0;
       max-width:100%;
-      flex:0 1 auto; /* allow shrink but don't force full-width */
+      flex:0 1 auto;            /* IMPORTANT: allow chip to shrink instead of overflowing */
     }
-
     .chip strong{ font-weight:700; }
     .chip-primary{ border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
     .chip-low{ border-color:var(--success); background:var(--success-soft); color:var(--success); }
     .chip-mod{ border-color:var(--warning); background:var(--warning-soft); color:var(--warning); }
     .chip-high{ border-color:var(--danger); background:var(--danger-soft); color:var(--danger); }
+
+    /* Let ONLY the long risk chips take available width and wrap nicely */
+    #chaChip, #orbitChip{ flex:1 1 auto; }
 
     .note{ margin-top:8px; font-size:0.80rem; color:var(--muted); line-height:1.35; }
 
@@ -267,22 +270,25 @@
       line-height:1.35;
     }
 
-    /* iPhone fix: ONLY long risk chips wrap inside the pill (no vertical stacking of the whole row) */
+    /* iPhone: wrap INSIDE the long risk chips in a tidy way (no full-width stacking) */
     @media (max-width: 520px){
+      /* slightly tighter chip look on iPhone */
+      .chip{ padding:4px 9px; }
+
       #chaChip, #orbitChip{
-        white-space: normal;        /* allow wrapping */
-        flex-wrap: wrap;            /* allow second line */
-        max-width: 100%;            /* never exceed card */
-        line-height: 1.2;
+        white-space:normal;      /* allow wrapping inside pill */
+        align-items:flex-start;  /* nicer when multi-line */
       }
-      /* keep label intact; let the risk text wrap */
+
+      /* Make it look deliberate: label line, then % line */
       #chaChip strong, #orbitChip strong{
-        white-space: nowrap;
+        display:block;
+        line-height:1.15;
+        white-space:normal;
       }
       #chaChip span, #orbitChip span{
-        white-space: normal;
-        overflow-wrap: break-word;  /* safe wrap */
-        word-break: normal;
+        display:block;
+        line-height:1.15;
       }
     }
   </style>
@@ -523,7 +529,6 @@
       }
 
       function computeBasis(cha, orbit, sexFemale, cfsVal) {
-        // Frailty first (CFS 8–9 always prognosis-dominant; CFS 7 preference-sensitive)
         if (cfsVal) {
           var c = parseInt(cfsVal, 10);
           if (c >= 8) return "Prognosis-dominant";
@@ -564,7 +569,6 @@
         var interpretation = "";
         var bullets = [];
 
-        // ---------- Base (CHA/ORBIT) ----------
         if (bands.below) {
           outcome = "Usually against anticoagulation";
           interpretation = "Stroke risk is below the usual treatment threshold. Anticoagulation is typically not recommended unless there are exceptional circumstances.";
@@ -584,7 +588,6 @@
           bullets.push("Discuss absolute stroke vs bleeding risks and document shared decision-making.");
           bullets.push("Optimise modifiable bleeding risks (BP, anaemia, GI risk, interacting medicines).");
         } else {
-          // Recommend band
           if (lowOrbit) {
             outcome = "Favours anticoagulation";
             interpretation = "Stroke risk is above the usual treatment threshold and bleeding risk is low on ORBIT. Anticoagulation is likely to provide net benefit for most patients.";
@@ -596,7 +599,6 @@
             bullets.push("Address anaemia, GI disease, uncontrolled hypertension and interacting medicines.");
             bullets.push("Use guideline-based DOAC dosing according to renal function, age and weight.");
           } else {
-            // High ORBIT
             if (priorStroke || cha >= 6) {
               outcome = "Preference-sensitive — individualise";
               interpretation = "Stroke risk is high (including high-risk features) and bleeding risk is high on ORBIT. Many patients may still derive net benefit, but decisions should be individualised and carefully documented.";
@@ -611,7 +613,6 @@
           }
         }
 
-        // ---------- Frailty modifiers (text + safety overrides) ----------
         var contextChips = [];
 
         if (mildMod) {
@@ -622,18 +623,14 @@
 
         if (severe) {
           contextChips.push({ text: "CFS 7 severe frailty", tone: "amber" });
-          // Avoid “often positive …” signalling in severe frailty; keep neutral/SDM framing.
           if (outcome.toLowerCase().indexOf("favours") !== -1 && highOrbit) outcome = "Preference-sensitive — individualise";
           interpretation += " In severe frailty (CFS 7), prognosis may still be variable; integrate expected trajectory and patient priorities into the decision.";
           bullets.push("Consider caregiver context, adherence feasibility and review plan explicitly.");
         }
 
-        // CFS 8–9: prognosis-dominant + avoid misleading positive headlines
         if (verySevere || terminal) {
           contextChips.push({ text: (terminal ? "CFS 9 terminal illness" : "CFS 8 very severe frailty"), tone: "purple" });
 
-          // HARD RULE: never show “Often positive …” or “Favours anticoagulation” as the headline in CFS 8–9.
-          // Use safer default language that signals time-to-benefit / goals-of-care dominance.
           if (highOrbit) {
             outcome = terminal
               ? "Often may favour no anticoagulation"
@@ -642,7 +639,6 @@
               "Bleeding risk is high on ORBIT. In very severe frailty/terminal illness, competing risks and time-to-benefit may outweigh threshold-based stroke prevention logic. Align with goals of care and the patient’s likely trajectory.";
             bullets.unshift("If withholding or stopping anticoagulation, document goals-of-care reasoning and agree review triggers.");
           } else {
-            // even if ORBIT not high, keep prognosis-dominant headline
             outcome = terminal
               ? "Goals-of-care dominant — individualise"
               : "Prognosis-dominant — individualise";
@@ -694,16 +690,13 @@
       ];
 
       function recalc() {
-        // Prevent age double-counting
         var cbAge75 = document.getElementById("age75");
         var cbAge6574 = document.getElementById("age6574");
         if (cbAge75 && cbAge6574 && cbAge75.checked && cbAge6574.checked) cbAge6574.checked = false;
 
-        // ORBIT age auto-derived
         var cbOrbitAge75 = document.getElementById("orbitAge75");
         if (cbOrbitAge75 && cbAge75) cbOrbitAge75.checked = cbAge75.checked;
 
-        // CHA
         var cha = 0;
         var sexFemale = false;
         for (var i = 0; i < chaInputs.length; i++) {
@@ -736,7 +729,6 @@
           if (strong) strong.textContent = chaCat;
         }
 
-        // ORBIT
         var orbit = 0;
         for (var j = 0; j < orbitInputs.length; j++) {
           var o = orbitInputs[j];
@@ -766,14 +758,12 @@
           if (ostrong) ostrong.textContent = orbitInfo.category;
         }
 
-        // Frailty
         var cfsSelect = document.getElementById("cfsSelect");
         var cfsVal = cfsSelect ? cfsSelect.value : "";
         var frailty = getFrailtyInfo(cfsVal);
         document.getElementById("frailtyMain").textContent = frailty.main;
         document.getElementById("frailtySub").textContent = frailty.sub;
 
-        // Context: anticoagulation evidence generalisability note
         var doacMainEl = document.getElementById("doacMain");
         var doacSubEl = document.getElementById("doacSub");
         var cNum = cfsVal ? parseInt(cfsVal, 10) : null;
@@ -793,30 +783,23 @@
           }
         }
 
-        // Build structured output
         var overall = buildOutput(cha, orbit, sexFemale, cfsVal);
-
-        // Outcome header (clean; no brackets)
         document.getElementById("netOutcome").textContent = overall.outcome;
 
-        // Chips (basis + frailty context + ORBIT band)
         var chipsEl = document.getElementById("netChips");
         chipsEl.innerHTML = "";
 
         var b = basisLabel(overall.basis);
         chipsEl.appendChild(makeMiniChip("Basis: " + b.text, b.tone));
 
-        // ORBIT chip
         var orbitTone = (orbit >= 4) ? "amber" : (orbit === 3) ? "amber" : "green";
         var orbitText = (orbit >= 4) ? "ORBIT high" : (orbit === 3) ? "ORBIT medium" : "ORBIT low";
         chipsEl.appendChild(makeMiniChip(orbitText, orbitTone));
 
-        // Frailty chips (if any)
         for (var ci = 0; ci < overall.chips.length; ci++) {
           chipsEl.appendChild(makeMiniChip(overall.chips[ci].text, overall.chips[ci].tone));
         }
 
-        // Structured body
         var body =
           "Evidence\n" + overall.evidence + "\n\n" +
           "Extrapolation\n" + overall.extrapolation + "\n\n" +
@@ -825,7 +808,6 @@
 
         document.getElementById("netBody").textContent = body;
 
-        // Call-out colour by basis
         var netBox = document.getElementById("netSummaryBox");
         netBox.classList.remove("guideline-positive","guideline-negative","preference","prognosis");
 
@@ -837,12 +819,10 @@
         } else if (overall.basis === "Preference-sensitive") {
           netBox.classList.add("preference");
         } else {
-          // Guideline-based
           if (isAgainst) netBox.classList.add("guideline-negative");
           else netBox.classList.add("guideline-positive");
         }
 
-        // Bullets
         var bulletsEl = document.getElementById("netBullets");
         bulletsEl.innerHTML = "";
         for (var k = 0; k < overall.bullets.length; k++) {
@@ -852,7 +832,6 @@
         }
       }
 
-      // Bind events (Safari-safe)
       var allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
       for (var i2 = 0; i2 < allCheckboxes.length; i2++) {
         allCheckboxes[i2].addEventListener("change", recalc);
