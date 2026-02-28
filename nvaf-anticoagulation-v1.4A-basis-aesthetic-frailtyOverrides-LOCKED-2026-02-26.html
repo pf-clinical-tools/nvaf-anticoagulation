@@ -111,20 +111,27 @@
       line-height:1.25;
     }
 
-    .score-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; font-size:0.86rem; }
+    .score-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+      font-size:0.86rem;
+      min-width:0; /* iPhone flexbox overflow safeguard */
+    }
 
     .chip{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:5px 10px;
-  border-radius:999px;
-  border:1px solid rgba(148,163,184,0.75);
-  background:#f9fafb;
-  white-space:nowrap;
-  min-width:0;      /* FIX: allows flex shrink */
-  max-width:100%;   /* FIX: prevents overflow */
-}
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.75);
+      background:#f9fafb;
+      white-space:nowrap;
+      min-width:0;      /* allows flex shrink */
+      max-width:100%;   /* prevents overflow */
+    }
     .chip strong{ font-weight:700; }
     .chip-primary{ border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
     .chip-low{ border-color:var(--success); background:var(--success-soft); color:var(--success); }
@@ -248,34 +255,26 @@
       font-size:0.92rem;
     }
 
- .disclaimer{
-  font-size:0.76rem;
-  color:var(--muted);
-  border-top:1px dashed #d1d5db;
-  margin-top:14px;
-  padding-top:10px;
-  line-height:1.35;
-}
+    .disclaimer{
+      font-size:0.76rem;
+      color:var(--muted);
+      border-top:1px dashed #d1d5db;
+      margin-top:14px;
+      padding-top:10px;
+      line-height:1.35;
+    }
 
-/* iPhone flexbox overflow safeguard */
-.score-row{ min-width:0; }
-
-/* iPhone: allow score chips to stack vertically when needed */
-@media (max-width: 520px){
-  .score-row{
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-/* iPhone: keep chip border contained AND keep text inside it */
-@media (max-width: 520px){
-  #chaChip, #orbitChip{
-    white-space: normal;   /* allow wrap inside the pill */
-    flex-wrap: wrap;       /* permit second line */
-    row-gap: 2px;
-  }
-}
+    /* iPhone: allow ONLY the long risk chips to wrap inside the pill (prevents overflow without ugly full-width stacking) */
+    @media (max-width: 520px){
+      #chaChip, #orbitChip{
+        white-space: normal;     /* allow wrap inside chip */
+        display: inline-flex;    /* keep pill sizing to content */
+        flex-wrap: wrap;         /* allow second line */
+        line-height: 1.2;
+      }
+      /* keep the label+value from separating oddly */
+      #chaChip strong, #orbitChip strong{ white-space: nowrap; }
+    }
   </style>
 </head>
 
@@ -877,7 +876,4 @@
     });
   </script>
 </body>
-
 </html>
-
-
