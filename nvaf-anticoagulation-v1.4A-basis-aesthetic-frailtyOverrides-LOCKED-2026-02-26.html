@@ -248,18 +248,27 @@
       font-size:0.92rem;
     }
 
-    .disclaimer{
-      font-size:0.76rem;
-      color:var(--muted);
-      border-top:1px dashed #d1d5db;
-      margin-top:14px;
-      padding-top:10px;
-      line-height:1.35;
-    }
-    /* iPhone flexbox overflow safeguard */
+ .disclaimer{
+  font-size:0.76rem;
+  color:var(--muted);
+  border-top:1px dashed #d1d5db;
+  margin-top:14px;
+  padding-top:10px;
+  line-height:1.35;
+}
+
+/* iPhone flexbox overflow safeguard */
 .score-row{ min-width:0; }
-    
-    /* iPhone: keep chip border contained AND keep text inside it */
+
+/* iPhone: allow score chips to stack vertically when needed */
+@media (max-width: 520px){
+  .score-row{
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* iPhone: keep chip border contained AND keep text inside it */
 @media (max-width: 520px){
   #chaChip, #orbitChip{
     white-space: normal;   /* allow wrap inside the pill */
@@ -870,4 +879,5 @@
 </body>
 
 </html>
+
 
