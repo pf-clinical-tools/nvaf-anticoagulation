@@ -114,15 +114,17 @@
     .score-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; font-size:0.86rem; }
 
     .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:5px 10px;
-      border-radius:999px;
-      border:1px solid rgba(148,163,184,0.75);
-      background:#f9fafb;
-      white-space:nowrap;
-    }
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 10px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,0.75);
+  background:#f9fafb;
+  white-space:nowrap;
+  min-width:0;      /* FIX: allows flex shrink */
+  max-width:100%;   /* FIX: prevents overflow */
+}
     .chip strong{ font-weight:700; }
     .chip-primary{ border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
     .chip-low{ border-color:var(--success); background:var(--success-soft); color:var(--success); }
@@ -254,6 +256,8 @@
       padding-top:10px;
       line-height:1.35;
     }
+    /* iPhone flexbox overflow safeguard */
+.score-row{ min-width:0; }
   </style>
 </head>
 
@@ -855,4 +859,5 @@
     });
   </script>
 </body>
+
 </html>
