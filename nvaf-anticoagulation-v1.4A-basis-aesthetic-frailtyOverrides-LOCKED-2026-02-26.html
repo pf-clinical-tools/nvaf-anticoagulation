@@ -5,16 +5,14 @@
   <title>NVAF Anticoagulation Risk Assessment Tool</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- NVAF_TOOL_MARKER_v1_4A_BASIS_AESTHETIC_FRAILTY_OVERRIDES_LOCKED_2026_02_20 -->
-  <!-- CHANGELOG (v1.4A):
-       - Aesthetics: rebuilt ORBIT input layout (clean alignment; consistent subnotes); tightened typography and spacing.
-       - Aesthetics: redesigned “Net clinical benefit” call-out header to avoid messy “:” and bracketed suffixes.
-         Now uses: label + outcome line + context chips (no brackets).
-       - Logic: removed “often positive …” headlines for CFS 8–9 (very severe frailty/terminal illness).
-         CFS 8–9 now triggers prognosis-dominant framing and safer default headlines (goals-of-care/time-to-benefit).
-       - Logic: CFS 7 remains preference-sensitive (not automatically prognosis-dominant).
-       - Colour: call-out colour follows Basis of recommendation (Guideline-based / Preference-sensitive / Prognosis-dominant).
-       - Safari-safe JS (no NodeList.forEach; no optional chaining).
+  <!-- NVAF_TOOL_MARKER_v1_4B_CLARITY_IPHONE_PADDING_LOCKED_2026_02_28 -->
+  <!-- CHANGELOG (v1.4B):
+       - Clarity: Stroke/bleeding risk pills always label what % refers to (“Stroke risk”, “Bleeding risk”).
+         Threshold/category text moved to a separate muted line below each score row (no label overwriting).
+       - iPhone: reduce body/card padding on small screens to increase usable width (prevents chip overflow).
+       - Cleanup: removed duplicated/conflicting .chip rule.
+       - Logic: unchanged from v1.4A.
+       - Safari-safe JS retained.
   -->
 
   <style>
@@ -133,7 +131,7 @@
       white-space:nowrap;
       min-width:0;
       max-width:100%;
-      flex:0 1 auto;            /* IMPORTANT: allow chip to shrink instead of overflowing */
+      flex:0 1 auto;            /* allow chip to shrink instead of overflowing */
     }
     .chip strong{ font-weight:700; }
     .chip-primary{ border-color:var(--primary); background:var(--primary-soft); color:var(--primary); }
@@ -141,9 +139,17 @@
     .chip-mod{ border-color:var(--warning); background:var(--warning-soft); color:var(--warning); }
     .chip-high{ border-color:var(--danger); background:var(--danger-soft); color:var(--danger); }
 
-    /* Let ONLY the long risk chips take available width and wrap nicely */
+    /* Let ONLY the long risk chips take available width */
     #chaChip, #orbitChip{ flex:1 1 auto; }
-.chip{ flex:0 1 auto; max-width:100%; min-width:0; white-space:nowrap; }
+
+    /* NEW: muted category line below the pills (keeps pill labels unambiguous) */
+    .chip-meta{
+      margin-top:6px;
+      font-size:0.78rem;
+      color:var(--muted);
+      line-height:1.25;
+    }
+
     .note{ margin-top:8px; font-size:0.80rem; color:var(--muted); line-height:1.35; }
 
     .result-box{
@@ -166,7 +172,7 @@
     }
     .basis-help strong{ font-weight:750; color:var(--text); }
 
-    /* Net call-out (aesthetic header; no messy ":" or brackets) */
+    /* Net call-out */
     .net-summary{
       border-left:6px solid var(--primary);
       background:#f8fafc;
@@ -270,13 +276,22 @@
       line-height:1.35;
     }
 
-    /* iPhone: increase usable width (fixes chip overflow without changing chip style) */
-@media (max-width: 520px){
-  body{ padding: 12px; }              /* was 24px */
-  .card{ padding: 14px 14px 16px; }   /* was 16px 18px 18px */
-  .grid{ gap: 14px; }                 /* was 18px */
-}
-    
+    /* iPhone: increase usable width (fixes chip squeeze without changing chip style) */
+    @media (max-width: 520px){
+      body{ padding: 12px; }              /* was 24px */
+      .card{ padding: 14px 14px 16px; }   /* was 16px 18px 18px */
+      .grid{ gap: 14px; }                 /* was 18px */
+    }
+
+    /* iPhone: allow ONLY the long risk chips to wrap inside the pill (subtle, not ugly) */
+    @media (max-width: 520px){
+      #chaChip, #orbitChip{
+        white-space: normal;
+        flex-wrap: wrap;
+        row-gap: 2px;
+      }
+      #chaChip strong, #orbitChip strong{ white-space: nowrap; }
+    }
   </style>
 </head>
 
@@ -312,6 +327,7 @@
           <span class="chip chip-primary"><strong>CHA₂DS₂-VASc</strong> <span id="chaScore">0</span></span>
           <span class="chip" id="chaChip"><strong>Stroke risk</strong> <span id="chaRiskText">≈0.2–0.9% / year</span></span>
         </div>
+        <div class="chip-meta" id="chaCategoryLine"></div>
 
         <p class="note">
           Thresholds are sex-specific: men 0 and women 1 (sex only) are below threshold; men 1 / women 2 = consider;
@@ -347,6 +363,7 @@
           <span class="chip chip-high"><strong>ORBIT</strong> <span id="orbitScore">0</span></span>
           <span class="chip" id="orbitChip"><strong>Bleeding risk</strong> <span id="orbitRiskText">≈2.5% / year (low)</span></span>
         </div>
+        <div class="chip-meta" id="orbitCategoryLine"></div>
 
         <p class="note" id="orbitNote">
           Use ORBIT to identify and mitigate bleeding risk; do not use it alone to deny OAC where stroke risk is above the usual treatment threshold.
@@ -442,7 +459,7 @@
           © 2026 Prabhath Fernando MBBS MD FRCP. All rights reserved.<br>
           This tool is intended for healthcare professionals only. It provides typical cohort-based estimates (vary by population and era) and does not replace clinical judgement,
           patient preferences, or local/national guidelines. Anticoagulation decisions must be individualised, documented, and reviewed as circumstances change.
-          Version v1.4A (basis-of-recommendation + frailty overrides + aesthetic rebuild).
+          Version v1.4B (clarity + iPhone padding fix).
         </p>
       </section>
     </div>
@@ -515,6 +532,7 @@
       }
 
       function computeBasis(cha, orbit, sexFemale, cfsVal) {
+        // Frailty first (CFS 8–9 always prognosis-dominant; CFS 7 preference-sensitive)
         if (cfsVal) {
           var c = parseInt(cfsVal, 10);
           if (c >= 8) return "Prognosis-dominant";
@@ -555,6 +573,7 @@
         var interpretation = "";
         var bullets = [];
 
+        // ---------- Base (CHA/ORBIT) ----------
         if (bands.below) {
           outcome = "Usually against anticoagulation";
           interpretation = "Stroke risk is below the usual treatment threshold. Anticoagulation is typically not recommended unless there are exceptional circumstances.";
@@ -574,6 +593,7 @@
           bullets.push("Discuss absolute stroke vs bleeding risks and document shared decision-making.");
           bullets.push("Optimise modifiable bleeding risks (BP, anaemia, GI risk, interacting medicines).");
         } else {
+          // Recommend band
           if (lowOrbit) {
             outcome = "Favours anticoagulation";
             interpretation = "Stroke risk is above the usual treatment threshold and bleeding risk is low on ORBIT. Anticoagulation is likely to provide net benefit for most patients.";
@@ -585,6 +605,7 @@
             bullets.push("Address anaemia, GI disease, uncontrolled hypertension and interacting medicines.");
             bullets.push("Use guideline-based DOAC dosing according to renal function, age and weight.");
           } else {
+            // High ORBIT
             if (priorStroke || cha >= 6) {
               outcome = "Preference-sensitive — individualise";
               interpretation = "Stroke risk is high (including high-risk features) and bleeding risk is high on ORBIT. Many patients may still derive net benefit, but decisions should be individualised and carefully documented.";
@@ -599,6 +620,7 @@
           }
         }
 
+        // ---------- Frailty modifiers ----------
         var contextChips = [];
 
         if (mildMod) {
@@ -676,13 +698,16 @@
       ];
 
       function recalc() {
+        // Prevent age double-counting
         var cbAge75 = document.getElementById("age75");
         var cbAge6574 = document.getElementById("age6574");
         if (cbAge75 && cbAge6574 && cbAge75.checked && cbAge6574.checked) cbAge6574.checked = false;
 
+        // ORBIT age auto-derived
         var cbOrbitAge75 = document.getElementById("orbitAge75");
         if (cbOrbitAge75 && cbAge75) cbOrbitAge75.checked = cbAge75.checked;
 
+        // CHA
         var cha = 0;
         var sexFemale = false;
         for (var i = 0; i < chaInputs.length; i++) {
@@ -702,7 +727,12 @@
         document.getElementById("chaRiskText").textContent = chaRiskText;
         document.getElementById("strokeResultMain").textContent = chaRiskText;
 
+        // Category line (NEW) — keeps pill label as “Stroke risk”
         var chaCat = getChaCategory(cha, sexFemale);
+        var chaCatEl = document.getElementById("chaCategoryLine");
+        if (chaCatEl) chaCatEl.textContent = chaCat;
+
+        // Colour the stroke-risk pill by band (no label overwriting)
         var chaChip = document.getElementById("chaChip");
         if (chaChip) {
           chaChip.classList.remove("chip-low", "chip-mod", "chip-high");
@@ -710,11 +740,9 @@
           if (bands.below) chaChip.classList.add("chip-low");
           else if (bands.consider) chaChip.classList.add("chip-mod");
           else chaChip.classList.add("chip-high");
-
-          var strong = chaChip.querySelector("strong");
-          if (strong) strong.textContent = chaCat;
         }
 
+        // ORBIT
         var orbit = 0;
         for (var j = 0; j < orbitInputs.length; j++) {
           var o = orbitInputs[j];
@@ -733,23 +761,27 @@
         document.getElementById("orbitResultMain").textContent = orbitInfo.shortRisk;
         document.getElementById("orbitNote").textContent = orbitInfo.detail;
 
+        // Category line (NEW) — keeps pill label as “Bleeding risk”
+        var orbitCatEl = document.getElementById("orbitCategoryLine");
+        if (orbitCatEl) orbitCatEl.textContent = orbitInfo.category;
+
+        // Colour the bleeding-risk pill by ORBIT band (no label overwriting)
         var orbitChip = document.getElementById("orbitChip");
         if (orbitChip) {
           orbitChip.classList.remove("chip-low", "chip-mod", "chip-high");
           if (orbit <= 2) orbitChip.classList.add("chip-low");
           else if (orbit === 3) orbitChip.classList.add("chip-mod");
           else orbitChip.classList.add("chip-high");
-
-          var ostrong = orbitChip.querySelector("strong");
-          if (ostrong) ostrong.textContent = orbitInfo.category;
         }
 
+        // Frailty
         var cfsSelect = document.getElementById("cfsSelect");
         var cfsVal = cfsSelect ? cfsSelect.value : "";
         var frailty = getFrailtyInfo(cfsVal);
         document.getElementById("frailtyMain").textContent = frailty.main;
         document.getElementById("frailtySub").textContent = frailty.sub;
 
+        // Context: anticoagulation evidence generalisability note
         var doacMainEl = document.getElementById("doacMain");
         var doacSubEl = document.getElementById("doacSub");
         var cNum = cfsVal ? parseInt(cfsVal, 10) : null;
@@ -769,23 +801,30 @@
           }
         }
 
+        // Build structured output
         var overall = buildOutput(cha, orbit, sexFemale, cfsVal);
+
+        // Outcome header
         document.getElementById("netOutcome").textContent = overall.outcome;
 
+        // Chips (basis + frailty context + ORBIT band)
         var chipsEl = document.getElementById("netChips");
         chipsEl.innerHTML = "";
 
         var b = basisLabel(overall.basis);
         chipsEl.appendChild(makeMiniChip("Basis: " + b.text, b.tone));
 
+        // ORBIT chip
         var orbitTone = (orbit >= 4) ? "amber" : (orbit === 3) ? "amber" : "green";
         var orbitText = (orbit >= 4) ? "ORBIT high" : (orbit === 3) ? "ORBIT medium" : "ORBIT low";
         chipsEl.appendChild(makeMiniChip(orbitText, orbitTone));
 
+        // Frailty chips
         for (var ci = 0; ci < overall.chips.length; ci++) {
           chipsEl.appendChild(makeMiniChip(overall.chips[ci].text, overall.chips[ci].tone));
         }
 
+        // Structured body
         var body =
           "Evidence\n" + overall.evidence + "\n\n" +
           "Extrapolation\n" + overall.extrapolation + "\n\n" +
@@ -794,6 +833,7 @@
 
         document.getElementById("netBody").textContent = body;
 
+        // Call-out colour by basis
         var netBox = document.getElementById("netSummaryBox");
         netBox.classList.remove("guideline-positive","guideline-negative","preference","prognosis");
 
@@ -809,6 +849,7 @@
           else netBox.classList.add("guideline-positive");
         }
 
+        // Bullets
         var bulletsEl = document.getElementById("netBullets");
         bulletsEl.innerHTML = "";
         for (var k = 0; k < overall.bullets.length; k++) {
@@ -818,6 +859,7 @@
         }
       }
 
+      // Bind events (Safari-safe)
       var allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
       for (var i2 = 0; i2 < allCheckboxes.length; i2++) {
         allCheckboxes[i2].addEventListener("change", recalc);
@@ -852,4 +894,3 @@
   </script>
 </body>
 </html>
-
