@@ -5,16 +5,14 @@
   <title>NVAF Anticoagulation Risk Assessment Tool</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- NVAF_TOOL_MARKER_v1_4B_CLARITY_IPHONE_PADDING_LOCKED_2026_02_28 -->
-  <!-- CHANGELOG (v1.4B):
-       - Clarity: Stroke/bleeding risk pills always label what % refers to (“Stroke risk”, “Bleeding risk”).
-         Threshold/category text moved to a separate muted line below each score row (no label overwriting).
-       - iPhone: reduce body/card padding on small screens to increase usable width (prevents chip overflow).
-       - Cleanup: removed duplicated/conflicting .chip rule.
-       - Logic: unchanged from v1.4A.
-       - Safari-safe JS retained.
-  -->
-
+  <!-- CHANGELOG (v1.4C):
+     - Reframed anticoagulation context box by frailty level.
+     - CFS 1–6: retains “Effect of anticoagulation (context)”.
+     - CFS 7: changes to “Evidence context in severe frailty”.
+     - CFS 8–9: changes to “Prognosis and evidence context”.
+     - Purpose: reduce positive treatment anchoring in very severe frailty / terminal illness.
+     - Layout and core scoring logic unchanged from v1.4B.
+-->
   <style>
     :root{
       --bg:#f3f4f6;
@@ -416,7 +414,7 @@
         </div>
 
         <div class="result-box" id="doacBox">
-          <h3>Effect of anticoagulation (context)</h3>
+          <h3 id="doacBoxTitle">Effect of anticoagulation (context)</h3>
           <div class="result-main" id="doacMain">Anticoagulation reduces AF stroke risk substantially</div>
           <div class="result-sub" id="doacSub">
             Evidence comes largely from AF trial populations; DOACs have lower intracranial haemorrhage than warfarin in trial populations.
@@ -459,7 +457,7 @@
           © 2026 Prabhath Fernando MBBS MD FRCP. All rights reserved.<br>
           This tool is intended for healthcare professionals only. It provides typical cohort-based estimates (vary by population and era) and does not replace clinical judgement,
           patient preferences, or local/national guidelines. Anticoagulation decisions must be individualised, documented, and reviewed as circumstances change.
-          Version v1.4B (clarity + iPhone padding fix).
+          Version v1.4C (context box reframed for severe frailty and prognosis context).
         </p>
       </section>
     </div>
@@ -781,20 +779,25 @@
         document.getElementById("frailtyMain").textContent = frailty.main;
         document.getElementById("frailtySub").textContent = frailty.sub;
 
-        // Context: anticoagulation evidence generalisability note
+               // Context box: anticoagulation / evidence / prognosis framing
+        var doacBoxTitleEl = document.getElementById("doacBoxTitle");
         var doacMainEl = document.getElementById("doacMain");
         var doacSubEl = document.getElementById("doacSub");
         var cNum = cfsVal ? parseInt(cfsVal, 10) : null;
-        if (doacMainEl && doacSubEl) {
+
+        if (doacBoxTitleEl && doacMainEl && doacSubEl) {
           if (cNum && cNum >= 8) {
-            doacMainEl.textContent = "Trial evidence may generalise less well in very severe frailty/terminal illness";
+            doacBoxTitleEl.textContent = "Prognosis and evidence context";
+            doacMainEl.textContent = "Prognosis and goals-of-care may outweigh threshold-based prevention logic";
             doacSubEl.textContent =
-              "Relative effects are derived from AF trial populations with limited representation of very severe frailty or short life expectancy. In this context, absolute benefit may be smaller and time-to-benefit and competing risks can dominate decisions.";
+              "Trial-based estimates may generalise less well in very severe frailty or terminal illness. Competing mortality, treatment burden, time-to-benefit and goals-of-care may reasonably dominate decisions.";
           } else if (cNum && cNum === 7) {
+            doacBoxTitleEl.textContent = "Evidence context in severe frailty";
             doacMainEl.textContent = "Evidence may generalise less well in severe frailty";
             doacSubEl.textContent =
               "Trial populations under-represent severe frailty. Balance stroke prevention benefits against bleeding risk, recovery potential, adherence feasibility and patient priorities.";
           } else {
+            doacBoxTitleEl.textContent = "Effect of anticoagulation (context)";
             doacMainEl.textContent = "Anticoagulation reduces AF stroke risk substantially";
             doacSubEl.textContent =
               "Evidence comes largely from AF trial populations; DOACs have lower intracranial haemorrhage than warfarin in trial populations.";
@@ -894,3 +897,4 @@
   </script>
 </body>
 </html>
+
